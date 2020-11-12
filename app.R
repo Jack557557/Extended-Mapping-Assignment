@@ -32,7 +32,7 @@ ui <- fluidPage(
              selectInput("type",
                          "IncidentType:",
                          c("All",
-                           unique(as.character(r$incidentType))))),
+                           unique(as.character(r$incidentType)))))
     ),
   
  mainPanel(
@@ -44,7 +44,6 @@ ui <- fluidPage(
  )
 )
 
-# Define server logic required to draw a histogram
 server <- function(input, output) {
   #table
   output$table1 <- DT::renderDataTable(DT::datatable({
@@ -59,11 +58,11 @@ server <- function(input, output) {
       data <- data[data$incidentType == input$type,]
     }
     
-    data<-data%>%group_by(disasterNumber,county,state)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),incidentType=max(incidentType),.groups = 'drop')
-    
-      }))
+    data<-data%>%group_by(disasterNumber,county,state,incidentType)%>%summarise(projectAmount=sum(projectAmount),.groups = 'drop')
+    data
+    }))
   
-  #US map
+  #US MAP
   output$plot <- renderPlot({
     data <- r
     if (input$storm != "All") {
@@ -76,15 +75,16 @@ server <- function(input, output) {
       data <- data[data$incidentType == input$type,]
     }
     
-    data<-data%>%group_by(disasterNumber,county,state)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),incidentType=max(incidentType),.groups = 'drop')
-    data<-data%>%group_by(state)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),incidentType=max(incidentType),.groups = 'drop')
+    data<-data%>%group_by(disasterNumber,county,state,incidentType)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),.groups = 'drop')
+    data<-data%>%group_by(state)%>%summarise(projectAmount=sum(projectAmount),.groups = 'drop')
     
-     plot_usmap(data = data, values = "projectAmount", color = "red") + 
+    plot_usmap(data = data, values = "projectAmount", color = "red") + 
       scale_fill_continuous(
         low = "blue", high = "red", name = "Disaster", label = scales::comma
       ) + labs(title = "US Disaster") + theme(legend.position = "right")
   })
   
+  #State Map
   #State map
   output$plot1 <- renderPlot({
     data <- r
@@ -98,9 +98,9 @@ server <- function(input, output) {
       data <- data[data$incidentType == input$type,]
     }
     
-    data<-data%>%group_by(disasterNumber,county,state)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),incidentType=max(incidentType),.groups = 'drop')
+    data<-data%>%group_by(disasterNumber,county,state,incidentType)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),.groups = 'drop')
     a<-data$state
-    data<-data%>%group_by(county)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),incidentType=max(incidentType),.groups = 'drop')
+    data<-data%>%group_by(county)%>%summarise(projectAmount=sum(projectAmount),countyCode=max(countyCode),stateNumberCode=max(stateNumberCode),.groups = 'drop')
     data<-data%>%filter(county != "Statewide")
     data<-data %>% rowwise %>% mutate(fips = 1000*stateNumberCode+countyCode)
     plot_usmap(regions = "county", data = data, values = "projectAmount",include = a ,color = "red") + 
@@ -109,10 +109,7 @@ server <- function(input, output) {
       ) + labs(title = "US Disaster") + theme(legend.position = "right")
   })
   
-  
-
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
