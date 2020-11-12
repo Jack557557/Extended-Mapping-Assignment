@@ -4,15 +4,17 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 library(usmap)
+library(stats)
+library(base)
 
 #data input
-r <- read_csv("C:/Users/Jack-/Desktop/MA615/project/r.csv")
+r <- read.csv("r.csv")
 
 
 ui <- fluidPage(
    
    # Application title
-    titlePanel("Hurricane Data Bank"),
+    titlePanel("Disaster Data Bank"),
     
     #storm select
     fluidRow(
